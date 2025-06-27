@@ -1,6 +1,6 @@
-# BrainBridge 🧠
+# BrainBridge
 
-A proof of concept 1:1 chat applciation with Turing complete BrainFuck language with Python wrapper(s) for network connectivity.
+A proof of concept 1:1 chat applciation with the Turing complete BrainFuck language with Python wrapper(s) for network connectivity & CLI.
 Pure Brainfuck cannot handle TCP/IP networking, so I used a layered architecture where:
 
 1. **Python** handles network I/O
