@@ -6,6 +6,7 @@ from brainfuck.interpreter import BFInterpreter
 
 
 class BrainChatServer:
+
     def __init__(self, bf_program_path, port=5555, debug=False):
         with open(bf_program_path, 'r') as f:
             self.bf_code = f.read()
@@ -21,17 +22,32 @@ class BrainChatServer:
             client_socket.close()
             return
 
-        client_id = f"Client{len(self.clients) + 1}"
+        # Wait for client name first
+        try:
+            client_socket.send(b"Enter your name: ")
+            name_data = client_socket.recv(1024).decode().strip()
+            client_name = name_data if name_data else f"Anonymous{len(self.clients) + 1}"
+        except:
+            client_name = f"Client{len(self.clients) + 1}"
+
         self.clients.append(client_socket)
-        self.client_names[client_socket] = client_id
+        self.client_names[client_socket] = client_name
 
-        print(f"[+] {client_id} connected from {address}")
-        client_socket.send(f"Welcome {client_id}! Waiting for another person...\n".encode())
+        print(f"[+] {client_name} connected from {address}")
+        client_socket.send(f"Welcome {client_name}! ".encode())
 
-        # Notify when both clients connected
-        if len(self.clients) == 2:
+        if len(self.clients) == 1:
+            client_socket.send(b"Waiting for another person...\n")
+        else:
+            # Notify both clients
+            other_client = self.clients[0] if self.clients[1] == client_socket else self.clients[1]
+            other_name = self.client_names[other_client]
+
+            client_socket.send(f"Connected with {other_name}!\n".encode())
+            other_client.send(f"\n{client_name} joined the chat!\n".encode())
+
             for client in self.clients:
-                client.send(b"=== Chat ready! Both clients connected ===\n")
+                client.send(b"=== Chat ready! Start typing ===\n")
 
         try:
             while True:
@@ -43,25 +59,21 @@ class BrainChatServer:
                 interpreter = BFInterpreter(self.bf_code, debug=self.debug)
                 processed = interpreter.run(message)
 
-                # Add sender label and broadcast
-                sender_name = self.client_names[client_socket]
-                labeled_message = f"[{sender_name}]: {processed.decode('ascii', errors='ignore')}\n"
-
-                # Send to all clients (including sender with "You" label)
+                # Send with proper labels
                 for client in self.clients:
                     if client == client_socket:
                         client.send(f"[You]: {processed.decode('ascii', errors='ignore')}\n".encode())
                     else:
-                        client.send(labeled_message.encode())
+                        client.send(f"[{client_name}]: {processed.decode('ascii', errors='ignore')}\n".encode())
 
         except Exception as e:
-            print(f"[-] Error with {client_id}: {e}")
+            print(f"[-] Error with {client_name}: {e}")  # Changed from client_id to client_name
         finally:
             self.clients.remove(client_socket)
             if client_socket in self.client_names:
                 del self.client_names[client_socket]
             client_socket.close()
-            print(f"[-] {client_id} disconnected")
+            print(f"[-] {client_name} disconnected")  # Changed from client_id to client_name
 
             # Notify remaining client
             if self.clients:

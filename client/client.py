@@ -8,20 +8,20 @@ class BrainChatClient:
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def receive_messages(self):
-        while True:
-            try:
-                message = self.socket.recv(1024).decode('ascii', errors='ignore')
-                if message:
-                    print(f"\n< {message}")
-                    print("> ", end="", flush=True)
-            except:
-                break
-
     def start(self):
         self.socket.connect((self.host, self.port))
-        print(f"[*] Connected to BrainChat at {self.host}:{self.port}")
-        print("[*] Type messages and press Enter. Type 'quit' to exit.\n")
+
+        # Server prompts for name
+        name_prompt = self.socket.recv(1024).decode()
+        print(name_prompt, end='', flush=True)
+
+        # Send name
+        username = input()
+        self.socket.send(username.encode() + b'\n')
+
+        # Receive welcome message
+        welcome = self.socket.recv(1024).decode()
+        print(welcome)
 
         # Start receiver thread
         thread = threading.Thread(target=self.receive_messages, daemon=True)
@@ -29,12 +29,21 @@ class BrainChatClient:
 
         # Send messages
         while True:
-            message = input("> ")
+            message = input()
             if message.lower() == 'quit':
                 break
             self.socket.send(message.encode('ascii'))
 
         self.socket.close()
+
+    def receive_messages(self):
+        while True:
+            try:
+                message = self.socket.recv(1024).decode('ascii', errors='ignore')
+                if message:
+                    print(f"{message}", end='', flush=True)
+            except:
+                break
 
 
 if __name__ == "__main__":

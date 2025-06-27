@@ -26,20 +26,22 @@ Pure Brainfuck cannot handle TCP/IP networking, so I used a layered architecture
 pip install -r requirements.txt
 
 # Terminal 1: Start server
-python -m brainbridge.server.server --bf brainfuck/programs/echo.bf
+python -m server.server
 
-# Terminal 2: Connect client
-python -m brainbridge.client.client
+# Terminal 2: Connect client 1
+python -m client.client
+
+# Terminal 3: Connect client 2
+python -m client.client
 
 # Debug mode (shows BF memory state)
 python -m brainbridge.server.server --debug
 ```
 
-
 ## Brainfuck Programs
 
 - echo.bf: Passes messages through unchanged
-- xor.bf: XOR encryption with key 42 (stretch goal)
+- xor.bf: XOR encryption with key 42
 
 ## Limitations
 
