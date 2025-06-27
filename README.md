@@ -7,6 +7,17 @@ Pure Brainfuck cannot handle TCP/IP networking, so I used a layered architecture
 2. **Brainfuck** processes all messages
 3. **Clients** see a normal chat experience
 
+## Architecture
+
+```
+┌─────────────┐         ┌─────────────┐
+│  Client A   │ ──TCP── │   Server    │
+└─────────────┘         │ ┌─────────┐ │
+                        │ │   BF    │ │
+┌─────────────┐         │ │ ,[.,]   │ │
+│  Client B   │ ──TCP── │ └─────────┘ │
+└─────────────┘         └─────────────┘
+```
 
 ## Quick Start
 
@@ -24,17 +35,6 @@ python -m brainbridge.client.client
 python -m brainbridge.server.server --debug
 ```
 
-## Architecture
-
-```
-┌─────────────┐         ┌─────────────┐
-│  Client A   │ ──TCP── │   Server    │
-└─────────────┘         │ ┌─────────┐ │
-                        │ │   BF    │ │
-┌─────────────┐         │ │ ,[.,]   │ │
-│  Client B   │ ──TCP── │ └─────────┘ │
-└─────────────┘         └─────────────┘
-```
 
 ## Brainfuck Programs
 

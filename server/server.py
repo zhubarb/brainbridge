@@ -12,10 +12,26 @@ class BrainChatServer:
         self.port = port
         self.debug = debug
         self.clients = []
+        self.client_names = {}  # Track client names
 
     def handle_client(self, client_socket, address):
-        print(f"[+] {address} connected")
+        # Enforce 1:1 chat - only 2 clients allowed
+        if len(self.clients) >= 2:
+            client_socket.send(b"Chat full - only 2 clients allowed for 1:1 chat\n")
+            client_socket.close()
+            return
+
+        client_id = f"Client{len(self.clients) + 1}"
         self.clients.append(client_socket)
+        self.client_names[client_socket] = client_id
+
+        print(f"[+] {client_id} connected from {address}")
+        client_socket.send(f"Welcome {client_id}! Waiting for another person...\n".encode())
+
+        # Notify when both clients connected
+        if len(self.clients) == 2:
+            for client in self.clients:
+                client.send(b"=== Chat ready! Both clients connected ===\n")
 
         try:
             while True:
@@ -27,19 +43,29 @@ class BrainChatServer:
                 interpreter = BFInterpreter(self.bf_code, debug=self.debug)
                 processed = interpreter.run(message)
 
-                # Broadcast to all clients
+                # Add sender label and broadcast
+                sender_name = self.client_names[client_socket]
+                labeled_message = f"[{sender_name}]: {processed.decode('ascii', errors='ignore')}\n"
+
+                # Send to all clients (including sender with "You" label)
                 for client in self.clients:
-                    try:
-                        client.send(processed)
-                    except:
-                        pass
+                    if client == client_socket:
+                        client.send(f"[You]: {processed.decode('ascii', errors='ignore')}\n".encode())
+                    else:
+                        client.send(labeled_message.encode())
 
         except Exception as e:
-            print(f"[-] Error with {address}: {e}")
+            print(f"[-] Error with {client_id}: {e}")
         finally:
             self.clients.remove(client_socket)
+            if client_socket in self.client_names:
+                del self.client_names[client_socket]
             client_socket.close()
-            print(f"[-] {address} disconnected")
+            print(f"[-] {client_id} disconnected")
+
+            # Notify remaining client
+            if self.clients:
+                self.clients[0].send(b"\n=== Other client disconnected ===\n")
 
     def start(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
