@@ -40,8 +40,28 @@ python -m brainbridge.server.server --debug
 
 ## Brainfuck Programs
 
-- echo.bf: Passes messages through unchanged
-- xor.bf: XOR encryption with key 42
+Available BF programs in `brainfuck/programs/`:
+
+1. **echo.bf** `,[.,]` - Simple echo service (default)
+2. **xor.bf** - XOR encryption with key 42
+3. **simple_encrypt.bf** `,[+++++++++++++.,]` - ROT13-style encryption (adds 13)
+4. **simple_decrypt.bf** `,[-------------.,]` - ROT13-style decryption (subtracts 13)
+
+### Using Different Programs
+
+```bash
+# Run with specific program by name
+python -m server.server --bf simple_encrypt
+
+# Run with full path
+python -m server.server --bf brainfuck/programs/xor.bf
+```
+
+### Encryption Demo
+
+When using `simple_encrypt`, the server showcases the encryption process:
+- Sender sees: `[You]: Hello`
+- Recipient sees: `[Sender]: [Uryy|] Hello` (encrypted in brackets, then decrypted)
 
 ## Limitations
 

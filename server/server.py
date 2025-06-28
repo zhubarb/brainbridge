@@ -16,10 +16,20 @@ class BrainChatServer:
         self.programs = {}
         self._load_bf_programs()
         
-        # Legacy support for single program
+        # Support both file path and program name
         if bf_program_path:
-            with open(bf_program_path, 'r') as f:
-                self.bf_code = f.read()
+            # Check if it's a known program name first
+            if bf_program_path in self.programs:
+                self.bf_code = self.programs[bf_program_path]
+                print(f"[*] Using {bf_program_path} program")
+            else:
+                # Try to load as file path
+                try:
+                    with open(bf_program_path, 'r') as f:
+                        self.bf_code = f.read()
+                except FileNotFoundError:
+                    print(f"[!] Program '{bf_program_path}' not found. Using echo.")
+                    self.bf_code = self.programs.get('echo', '')
         else:
             self.bf_code = self.programs.get('echo', '')
         self.clients = []
@@ -31,7 +41,9 @@ class BrainChatServer:
         programs_dir = 'brainfuck/programs/'
         bf_files = {
             'echo': 'echo.bf',
-            'xor': 'xor.bf'
+            'xor': 'xor.bf',
+            'simple_encrypt': 'simple_encrypt.bf',
+            'simple_decrypt': 'simple_decrypt.bf'
         }
         
         for name, filename in bf_files.items():
@@ -90,16 +102,38 @@ class BrainChatServer:
                 # Increment message counter
                 self.client_counters[client_socket] += 1
                 
-                # Process message with BF interpreter
-                interpreter = BFInterpreter(self.bf_code, debug=self.debug)
-                processed = interpreter.run(message)
+                # Check if using encryption program to showcase encrypt→decrypt pipeline
+                if self.bf_code == ",[+++++++++++++.,]":  # If using encrypt
+                    # Show the encryption process
+                    interpreter1 = BFInterpreter(self.bf_code, debug=self.debug)
+                    encrypted = interpreter1.run(message)
+                    
+                    # Also decrypt to show it's reversible
+                    decrypt_code = ",[-------------.,]"
+                    interpreter2 = BFInterpreter(decrypt_code, debug=self.debug)
+                    decrypted = interpreter2.run(encrypted)
+                    
+                    # Send both versions to demonstrate
+                    for client in self.clients:
+                        if client == client_socket:
+                            # For the sender, show their original message normally
+                            client.send(f"[You]: {message.decode('ascii', errors='ignore')}\n".encode())
+                        else:
+                            # For recipients, show [encrypted] followed by decrypted
+                            encrypted_str = encrypted.decode('ascii', errors='replace')
+                            decrypted_str = decrypted.decode('ascii', errors='ignore')
+                            client.send(f"[{client_name}]: [{encrypted_str}] {decrypted_str}\n".encode())
+                else:
+                    # Process message with BF interpreter
+                    interpreter = BFInterpreter(self.bf_code, debug=self.debug)
+                    processed = interpreter.run(message)
 
-                # Send with proper labels
-                for client in self.clients:
-                    if client == client_socket:
-                        client.send(f"[You]: {processed.decode('ascii', errors='ignore')}\n".encode())
-                    else:
-                        client.send(f"[{client_name}]: {processed.decode('ascii', errors='ignore')}\n".encode())
+                    # Send with proper labels
+                    for client in self.clients:
+                        if client == client_socket:
+                            client.send(f"[You]: {processed.decode('ascii', errors='ignore')}\n".encode())
+                        else:
+                            client.send(f"[{client_name}]: {processed.decode('ascii', errors='ignore')}\n".encode())
 
         except Exception as e:
             print(f"[-] Error with {client_name}: {e}")  # Changed from client_id to client_name

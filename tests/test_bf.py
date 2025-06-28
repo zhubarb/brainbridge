@@ -32,5 +32,31 @@ def test_xor_simple():
     result = interpreter.run(b"ABC")
     assert len(result) == 3
 
+def test_simple_encrypt():
+    code = load_bf_program("simple_encrypt.bf")
+    interpreter = BFInterpreter(code)
+    result = interpreter.run(b"Hello")
+    assert result == b"Uryy|"  # Each char + 13
 
+def test_simple_decrypt():
+    code = load_bf_program("simple_decrypt.bf")
+    interpreter = BFInterpreter(code)
+    result = interpreter.run(b"Uryy|")
+    assert result == b"Hello"  # Each char - 13
 
+def test_encrypt_decrypt_round_trip():
+    encrypt_code = load_bf_program("simple_encrypt.bf")
+    decrypt_code = load_bf_program("simple_decrypt.bf")
+    
+    test_messages = [b"Hello World!", b"ABC123", b"xyz"]
+    
+    for msg in test_messages:
+        # Encrypt
+        encrypt_interpreter = BFInterpreter(encrypt_code)
+        encrypted = encrypt_interpreter.run(msg)
+        
+        # Decrypt
+        decrypt_interpreter = BFInterpreter(decrypt_code)
+        decrypted = decrypt_interpreter.run(encrypted)
+        
+        assert decrypted == msg, f"Round trip failed for {msg}"
