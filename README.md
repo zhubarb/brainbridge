@@ -52,16 +52,13 @@ Available BF programs in `brainfuck/programs/`:
 ```bash
 # Run with specific program by name
 python -m server.server --bf simple_encrypt
-
-# Run with full path
-python -m server.server --bf brainfuck/programs/xor.bf
 ```
 
 ### Encryption Demo
 
 When using `simple_encrypt`, the server showcases the encryption process:
 - Sender sees: `[You]: Hello`
-- Recipient sees: `[Sender]: [Uryy|] Hello` (encrypted in brackets, then decrypted)
+- Recipient sees: `[Sender]: [Uryy|] Hello` (encrypted text in gray brackets, then decrypted)
 
 ## Limitations
 

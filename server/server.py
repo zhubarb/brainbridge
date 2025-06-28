@@ -122,7 +122,8 @@ class BrainChatServer:
                             # For recipients, show [encrypted] followed by decrypted
                             encrypted_str = encrypted.decode('ascii', errors='replace')
                             decrypted_str = decrypted.decode('ascii', errors='ignore')
-                            client.send(f"[{client_name}]: [{encrypted_str}] {decrypted_str}\n".encode())
+                            # ANSI escape codes: \033[90m = gray, \033[0m = reset
+                            client.send(f"[{client_name}]: \033[90m[{encrypted_str}]\033[0m {decrypted_str}\n".encode())
                 else:
                     # Process message with BF interpreter
                     interpreter = BFInterpreter(self.bf_code, debug=self.debug)

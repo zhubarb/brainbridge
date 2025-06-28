@@ -32,6 +32,8 @@ class BrainChatClient:
             message = input()
             if message.lower() == 'quit':
                 break
+            # Move cursor up and clear the line to remove the duplicate
+            print('\033[1A\033[K', end='', flush=True)
             self.socket.send(message.encode('ascii'))
 
         self.socket.close()
