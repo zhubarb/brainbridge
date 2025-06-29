@@ -1,13 +1,14 @@
 # BrainBridge
 
 A proof of concept 1:1 chat applciation with the Turing complete BrainFuck language with Python wrapper(s) for network connectivity & CLI.
+
+## Architecture
+
 Pure Brainfuck cannot handle TCP/IP networking, so I used a layered architecture where:
 
 1. **Python** handles network I/O
 2. **Brainfuck** processes all messages
 3. **Clients** see a normal chat experience
-
-## Architecture
 
 ```
 ┌─────────────┐         ┌─────────────┐
@@ -35,7 +36,7 @@ python -m client.client
 python -m client.client
 
 # Debug mode (shows BF memory state)
-python -m brainbridge.server.server --debug
+python -m server.server --debug
 ```
 
 ## Brainfuck Programs
